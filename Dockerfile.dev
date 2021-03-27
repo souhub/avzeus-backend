@@ -1,0 +1,25 @@
+FROM golang:1.15.0-alpine3.12
+
+WORKDIR /go/src/github.com/souhub/avzeus-backend
+
+RUN apk add --no-cache \
+    alpine-sdk \
+    git
+
+ENV DB_USER souhub
+
+ENV DB_PASS devpass
+
+ENV DB_PROTOCOL tcp
+
+ENV DB_ENDPOINT mysql:3306
+
+ENV DB_NAME avzeus
+
+COPY . .
+
+RUN go build cmd
+
+EXPOSE 8080
+
+CMD ["go","run","cmd/main.go"]
