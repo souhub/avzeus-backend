@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/souhub/av-zeus/pkg/db"
+	"github.com/souhub/avzeus-backend/pkg/db"
 )
 
 // GET

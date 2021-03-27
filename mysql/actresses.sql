@@ -17,7 +17,7 @@ INSERT INTO actresses
 VALUES
 (
     '明日花キララ',
-    'https://an-image-path-to-actress1',
+    'https://storage.googleapis.com/avzeus-dev/actresses/%E6%98%8E%E6%97%A5%E8%8A%B1%E3%82%AD%E3%83%A9%E3%83%A9.jpeg',
     '[3,6,77,83,2,44,78,32,1,678,21,5]'
 );
 
@@ -30,7 +30,7 @@ INSERT INTO actresses
 VALUES
 (
     '深田えいみ',
-    'https://an-image-path-to-actress2',
+    'https://storage.googleapis.com/avzeus-dev/actresses/%E6%B7%B1%E7%94%B0%E3%81%88%E3%81%84%E3%81%BF.jpeg',
     '[3,6,77,83,2,44,78,32,1,678,21,5]'
 );
 
@@ -43,6 +43,6 @@ INSERT INTO actresses
 VALUES
 (
     '橋本ありな',
-    'https://an-image-path-to-actress3',
+    'https://storage.googleapis.com/avzeus-dev/actresses/%E6%A9%8B%E6%9C%AC%E3%81%82%E3%82%8A%E3%81%AA.jpeg',
     '[6,33,22,67,887,22,4,7,89,8]'
 );

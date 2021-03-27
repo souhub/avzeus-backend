@@ -4,10 +4,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/souhub/av-zeus/pkg/route"
+	"github.com/souhub/avzeus-backend/pkg/route"
 )
 
 func main() {
-	http.HandleFunc("/", route.Actresses)
+	http.HandleFunc("/actresses", route.Actresses)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

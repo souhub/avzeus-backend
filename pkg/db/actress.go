@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/souhub/av-zeus/pkg/model"
+	"github.com/souhub/avzeus-backend/pkg/model"
 )
 
 func FetchActresses() (actresses model.Actresses) {
