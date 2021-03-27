@@ -4,4 +4,4 @@
 
 システム構成図は以下のとおりです。
 このリポジトリは以下の図の Backend です。
-![設計図](assets/infrastructure_diagram.png)
+![設計図](assets/infrastructure_diagram.svg)
