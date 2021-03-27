@@ -6,7 +6,7 @@ ENV MYSQL_USER souhub
 
 ENV MYSQL_PASSWORD devpass
 
-ENV MYSQL_DATABASE zeus
+ENV MYSQL_DATABASE avzeus
 
 COPY actresses.sql /docker-entrypoint-initdb.d
 
