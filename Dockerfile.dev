@@ -20,6 +20,6 @@ COPY . .
 
 RUN go build cmd
 
-EXPOSE 8080
+EXPOSE 8000
 
 CMD ["go","run","cmd/main.go"]
