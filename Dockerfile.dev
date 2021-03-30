@@ -4,7 +4,8 @@ WORKDIR /go/src/github.com/souhub/avzeus-backend
 
 RUN apk add --no-cache \
     alpine-sdk \
-    git
+    git \
+    && go get github.com/oxequa/realize
 
 ENV DB_USER souhub
 
@@ -18,10 +19,11 @@ ENV DB_NAME avzeus
 
 ENV CLOUD_STORAGE_PATH https://storage.googleapis.com/avzeus
 
-COPY . .
+# COPY . .
 
 RUN go build cmd
 
 EXPOSE 8000
 
-CMD ["go","run","cmd/main.go"]
+CMD [ "realize", "start"]
+# CMD ["go","run","cmd/main.go"]

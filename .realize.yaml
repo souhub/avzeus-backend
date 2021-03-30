@@ -1,0 +1,23 @@
+settings:
+  legacy:
+    force: false
+    interval: 0s
+schema:
+- name: avzeus-backend
+  path: .
+  commands:
+    build:
+      status: true
+      method: go build -o cmd/main ./cmd/main.go
+    run:
+      status: true
+      method: ./cmd/main
+  watcher:
+    extensions:
+    - go
+    paths:
+    - /
+    ignore:
+      paths:
+      - .git
+      - .realize

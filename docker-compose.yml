@@ -1,0 +1,19 @@
+version: "3"
+services:
+  mysql:
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3306:3306"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    depends_on:
+      - mysql
+    volumes:
+      - ./:/go/src/github.com/souhub/avzeus-backend
+    ports:
+      - "8000:8000"
