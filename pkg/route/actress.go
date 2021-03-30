@@ -33,5 +33,5 @@ func Recommendation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer res.Body.Close()
-	http.Redirect(w, r, "http://localhost:880/recommendation", 301)
+	http.Redirect(w, r, "http://localhost:8080/recommendation", 301)
 }
