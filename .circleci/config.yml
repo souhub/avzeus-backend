@@ -20,3 +20,8 @@ jobs:
       - run:
           name: docker-compose down
           command: docker-compose down
+
+workflows:
+  Build_and_Push_images:
+    jobs:
+      - Build-and-Tests
