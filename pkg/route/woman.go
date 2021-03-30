@@ -26,24 +26,27 @@ func Wemen(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
+// POST
+// /selection
 func Selection(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	selectedWemen := make([]int, 0, 5)
 	// HTTPメソッド確認
 	if r.Method != "POST" {
 		http.Redirect(w, r, "http://localhost:8080/selection", 301)
 		return
 	}
-	//
+	// formのデータを解析し、受け取る
+	r.ParseForm()
+	selectedWemen := make([]int, 0, 5)
+	// string型で受け取る
 	s := r.FormValue("selected_wemen")
+	// string型を[]stringに変換
 	formData := strings.Split(s, ",")
-	log.Println(formData)
-	log.Println(len(formData))
-	log.Printf("%T", formData)
+	// 5人選択されてなければリダイレクトさせる
 	if len(formData) != 5 {
 		http.Redirect(w, r, "http://localhost:8080/selection", 301)
 		return
 	}
+	// []string型から[]int型に変換
 	for _, v := range formData {
 		num, err := strconv.Atoi(v)
 		if err != nil {
@@ -63,4 +66,13 @@ func Selection(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Accept-Charset", "utf-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write(res)
+	http.Redirect(w, r, "/results", 200)
+	// http.Redirect(w, r, "http://localhost:880/recommendation", 301)
 }
+
+func passDataToAI(w http.ResponseWriter, res []byte) {
+
+}
+
+// GET
+//
