@@ -1,0 +1,25 @@
+version: 2.1
+# orbs:
+#   aws-ecr: circleci/aws-ecr@6.12.2
+#   aws-ecs: circleci/aws-ecs@1.3.0
+jobs:
+  Build-and-Tests:
+    machine:
+      image: circleci/classic:edge
+    steps:
+      - checkout
+      # - run:
+      #     name: docker-compose build
+      #     command: docker-compose build
+      # - run:
+      #     name: docker-compose up
+      #     command: docker-compose up -d
+      # - run:
+      #     name: go test
+      #     command: docker-compose run wecircles go test ./... -v
+      # - run:
+      #     name: docker-compose down
+      #     command: docker-compose down
+      - run:
+        name: go test
+        command: go run test ./... -v
