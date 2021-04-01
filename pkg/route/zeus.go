@@ -1,0 +1,79 @@
+package route
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"net/url"
+	"strings"
+
+	"github.com/souhub/avzeus-backend/pkg/db"
+)
+
+// GET
+// /actress
+func Actresses(w http.ResponseWriter, r *http.Request) {
+	actresses := db.FetchActresses()
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Accept-Charset", "utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	err := json.NewEncoder(w).Encode(actresses)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		return
+	}
+}
+
+// GET
+// /wemen
+func Wemen(w http.ResponseWriter, r *http.Request) {
+	wemen := db.FetchWemen()
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Accept-Charset", "utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	err := json.NewEncoder(w).Encode(wemen)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		return
+	}
+}
+
+// POST
+// /selection
+func PostDataToAI(w http.ResponseWriter, r *http.Request) {
+	// HTTPメソッド確認
+	if r.Method != "POST" {
+		http.Redirect(w, r, "http://localhost:8080/selection", 301)
+		return
+	}
+	// formのデータを解析し、受け取る
+	r.ParseForm()
+	// string型で受け取る
+	selectedWemenDataStr := r.FormValue("selected_wemen")
+	// string型を[]stringに変換し、選択された人数を確認する準備
+	formData := strings.Split(selectedWemenDataStr, ",")
+	// 5人選択されてなければリダイレクトさせる
+	if len(formData) != 5 {
+		http.Redirect(w, r, "http://localhost:8080/selection", 301)
+		return
+	}
+	// リダイレクト URIを作成
+	url := fmt.Sprintf("http://localhost:5000/inputted-data/%s", selectedWemenDataStr)
+	// リダイレクト
+	http.Redirect(w, r, url, 301)
+}
+
+// GET
+// /outputted-data
+func GetDataFromAI(w http.ResponseWriter, r *http.Request) {
+	requestUrl := r.URL
+	query := requestUrl.RawQuery
+	decodedQuery, err := url.QueryUnescape(query)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Fprintf(w, "%s", decodedQuery)
+}

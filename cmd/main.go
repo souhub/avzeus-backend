@@ -4,13 +4,16 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/souhub/avzeus-backend/pkg/route"
 )
 
 func main() {
-	http.HandleFunc("/actresses", route.Actresses)
-	http.HandleFunc("/wemen", route.Wemen)
-	http.HandleFunc("/selection", route.Selection)
-	http.HandleFunc("/recommendation", route.Recommendation)
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	r := mux.NewRouter()
+	r.HandleFunc("/actresses", route.Actresses).Methods("GET")
+	r.HandleFunc("/wemen", route.Wemen).Methods("GET")
+	r.HandleFunc("/selection", route.PostDataToAI).Methods("POST")
+	r.HandleFunc("/outputted-data", route.GetDataFromAI).Methods("GET")
+	r.HandleFunc("/data", route.GetDataFromAI).Methods("GET")
+	log.Fatal(http.ListenAndServe(":8000", r))
 }
