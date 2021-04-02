@@ -6,10 +6,15 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 
+	"github.com/gorilla/schema"
 	"github.com/souhub/avzeus-backend/pkg/db"
+	"github.com/souhub/avzeus-backend/pkg/model"
 )
+
+const BaseURL = "http://localhost:8080"
 
 // GET
 // /actress
@@ -66,14 +71,39 @@ func PostDataToAI(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url, 301)
 }
 
+var decoder = schema.NewDecoder()
+
 // GET
 // /outputted-data
 func GetDataFromAI(w http.ResponseWriter, r *http.Request) {
-	requestUrl := r.URL
-	query := requestUrl.RawQuery
-	decodedQuery, err := url.QueryUnescape(query)
+	// クエリを抽出
+	requestedQuery := r.URL.Query()
+	// TrainingData 構造体にクエリを入れる
+	var trainingData model.TrainingData
+	err := decoder.Decode(&trainingData, requestedQuery)
+	if err != nil {
+		log.Println("ERRRRRRRRRRRRRRRR")
+		log.Fatalln(err)
+	}
+	// Training data の states と epsilons を保存してidを返す
+	trainingDataID, err := db.InsertTraining(trainingData)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	fmt.Fprintf(w, "%s", decodedQuery)
+	// パースして変換 *url.URL に型変換
+	redirectURL, err := url.Parse(BaseURL)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	// リクエストを投げるパスを指定
+	requestPath := "recommendation"
+	// パスの結合がある場合はここで結合される
+	redirectURL.Path = path.Join(redirectURL.Path, requestPath)
+	// クエリをセット
+	query := redirectURL.Query()
+	query.Set("id", fmt.Sprint(trainingDataID))
+	query.Add("ids", trainingData.ActressesIDs)
+	redirectURL.RawQuery = query.Encode()
+	// リダイレクト
+	http.Redirect(w, r, redirectURL.String(), 302)
 }

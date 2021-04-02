@@ -1,10 +1,11 @@
 -- Create actresses table
 CREATE TABLE IF NOT EXISTS actresses
 (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT NOT NULL AUTO_INCREMENT,
     name VARCHAR(255),
     image_path VARCHAR(255),
-    vector VARCHAR(1000)
+    vector VARCHAR(1000),
+    PRIMARY KEY(id)
 );
 
 -- Insert some data

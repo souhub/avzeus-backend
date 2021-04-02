@@ -8,9 +8,7 @@ ENV MYSQL_PASSWORD devpass
 
 ENV MYSQL_DATABASE avzeus
 
-COPY actresses.sql /docker-entrypoint-initdb.d
-
-COPY wemen.sql /docker-entrypoint-initdb.d
+COPY tables docker-entrypoint-initdb.d
 
 COPY zeus.cnf /etc/mysql/conf.d
 
