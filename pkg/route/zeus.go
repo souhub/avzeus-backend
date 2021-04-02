@@ -82,7 +82,6 @@ func GetDataFromAI(w http.ResponseWriter, r *http.Request) {
 	var trainingData model.TrainingData
 	err := decoder.Decode(&trainingData, requestedQuery)
 	if err != nil {
-		log.Println("ERRRRRRRRRRRRRRRR")
 		log.Fatalln(err)
 	}
 	// Training data の states と epsilons を保存してidを返す
