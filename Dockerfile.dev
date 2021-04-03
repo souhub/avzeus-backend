@@ -19,7 +19,7 @@ ENV DB_NAME avzeus
 
 ENV CLOUD_STORAGE_PATH https://storage.googleapis.com/avzeus
 
-# COPY . .
+COPY . .
 
 RUN go build cmd
 

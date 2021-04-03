@@ -15,5 +15,6 @@ func main() {
 	r.HandleFunc("/selection", route.PostDataToAI).Methods("POST")
 	r.HandleFunc("/outputted-data", route.GetDataFromAI).Methods("GET")
 	r.HandleFunc("/data", route.GetDataFromAI).Methods("GET")
+	r.HandleFunc("/recommendation", route.GetRecommendedActresses).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8000", r))
 }
