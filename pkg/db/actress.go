@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 
 	"github.com/souhub/avzeus-backend/pkg/model"
@@ -13,11 +14,27 @@ func FetchActresses() (actresses model.Actresses) {
 		var actress model.Actress
 		err := rows.Scan(&actress.ID, &actress.Name, &actress.ImagePath, &actress.Vector)
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
 		}
 		actresses = append(actresses, actress)
 	}
 	return actresses
+}
+
+func FetchRecommendedActresses(ids []int) (recommendedActresses model.Actresses, err error) {
+	for _, id := range ids {
+		row, err := fetchActressRow(id)
+		if err != nil {
+			log.Println(err)
+		}
+		var actress model.Actress
+		err = row.Scan(&actress.ID, &actress.Name, &actress.ImagePath, &actress.Vector)
+		if err != nil {
+			log.Println(err)
+		}
+		recommendedActresses = append(recommendedActresses, actress)
+	}
+	return recommendedActresses, err
 }
 
 func fetchActressesRows() *sql.Rows {
@@ -25,10 +42,21 @@ func fetchActressesRows() *sql.Rows {
 	rows, err := dbCon.Query(query)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Panicln("No rows")
+			log.Println("No rows")
 		} else {
 			log.Println(err)
 		}
 	}
 	return rows
+}
+
+func fetchActressRow(id int) (row *sql.Row, err error) {
+	query := `SELECT * FROM actresses WHERE id=?`
+	row = dbCon.QueryRow(query, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = errors.New("No rows")
+		}
+	}
+	return row, err
 }

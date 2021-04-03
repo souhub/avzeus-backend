@@ -100,9 +100,42 @@ func GetDataFromAI(w http.ResponseWriter, r *http.Request) {
 	redirectURL.Path = path.Join(redirectURL.Path, requestPath)
 	// クエリをセット
 	query := redirectURL.Query()
-	query.Set("id", fmt.Sprint(trainingDataID))
-	query.Add("ids", trainingData.ActressesIDs)
+	query.Set("ids", trainingData.ActressesIDs)
+	query.Add("id", fmt.Sprint(trainingDataID))
+
+	query.Add("states", trainingData.States)     // 見る用に一時的に追加
+	query.Add("epsilons", trainingData.Epsilons) // 見る用に一時的に追加
+
 	redirectURL.RawQuery = query.Encode()
 	// リダイレクト
 	http.Redirect(w, r, redirectURL.String(), 302)
+}
+
+// GET
+// /recommendation
+func GetRecommendedActresses(w http.ResponseWriter, r *http.Request) {
+	// クエリを抽出
+	requestedQuery := r.URL.Query()
+	// q := requestedQuery.Get("id")
+	qq := requestedQuery.Get("ids")
+	// []int 型に変換
+	recommendedActressesIDs, err := convertStrToIntArray(qq)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	// クエリの配列をもとに、DBからデータ取得
+	recommendedActresses, err := db.FetchRecommendedActresses(recommendedActressesIDs)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	// jsonとして書き込む
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Accept-Charset", "utf-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	err = json.NewEncoder(w).Encode(recommendedActresses)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		return
+	}
 }
