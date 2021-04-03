@@ -19,13 +19,13 @@ services:
       - "8000:8000"
 
   ai:
-    image: avzeus-ai:1.6
+    image: souhub/avzeus-ai_dev:1.0
     tty: true
     ports:
       - "5000:5000"
 
   frontend:
-    image: avzeus-frontend:1.0
+    image: souhub/avzeus-frontend:1.0
     tty: true
     depends_on:
       - mysql
