@@ -100,8 +100,8 @@ func GetDataFromAI(w http.ResponseWriter, r *http.Request) {
 	redirectURL.Path = path.Join(redirectURL.Path, requestPath)
 	// クエリをセット
 	query := redirectURL.Query()
-	query.Set("ids", trainingData.ActressesIDs)
-	query.Add("id", fmt.Sprint(trainingDataID))
+	query.Set("actresses_ids", trainingData.ActressesIDs)
+	query.Add("training_id", fmt.Sprint(trainingDataID))
 
 	query.Add("states", trainingData.States)     // 見る用に一時的に追加
 	query.Add("epsilons", trainingData.Epsilons) // 見る用に一時的に追加
