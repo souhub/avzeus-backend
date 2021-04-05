@@ -1,0 +1,34 @@
+FROM golang:1.15.0-alpine3.12
+
+WORKDIR /go/src/github.com/souhub/avzeus-backend
+
+RUN apk add --no-cache \
+    alpine-sdk \
+    git \
+    && go get github.com/oxequa/realize
+
+ENV DB_USER souhub
+
+ENV DB_PASS devpass
+
+ENV DB_PROTOCOL tcp
+
+ENV DB_ENDPOINT mysql:3306
+
+ENV DB_NAME avzeus
+
+ENV CLOUD_STORAGE_PATH https://storage.googleapis.com/avzeus
+
+ENV BACKEND_URL http://backend:8000
+
+ENV AI_URL http://ai:5000
+
+ENV FRONTEND_URL http://frontend:8080
+
+COPY . .
+
+RUN go build cmd
+
+EXPOSE 8000
+
+CMD ["go","run","cmd/main.go"]
