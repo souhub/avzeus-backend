@@ -12,7 +12,7 @@ func FetchWemen() (wemen model.Wemen) {
 	rows := fetchWemenRows()
 	for rows.Next() {
 		var woman model.Woman
-		err := rows.Scan(&woman.ID, &woman.ImagePath)
+		err := rows.Scan(&woman.ID, &woman.Name, &woman.ImagePath)
 		if err != nil {
 			log.Fatalln(err)
 		}

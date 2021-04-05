@@ -55,16 +55,8 @@ func GetRecommendationActresses(w http.ResponseWriter, r *http.Request) {
 	requestedQuery := r.URL.Query()
 	selectedWemenDataStr := requestedQuery.Get("selected_wemen_ids")
 
-	// string型を[]stringに変換し、選択された人数を確認する準備
-	// formData := strings.Split(selectedWemenDataStr, ",")
-
 	//  フォームで5人選択されているかチェック
 	checkSelectionForm(selectedWemenDataStr, w, r)
-	// if len(formData) != 5 {
-	// 	endpoint := BaseURL + "/selection"
-	// 	http.Redirect(w, r, endpoint, 301)
-	// 	return
-	// }
 
 	// AIサーバーに投げるリクエストURLを作成
 	target := "recommendation"
