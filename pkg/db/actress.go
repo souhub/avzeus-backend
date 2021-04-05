@@ -12,7 +12,7 @@ func FetchActresses() (actresses model.Actresses) {
 	rows := fetchActressesRows()
 	for rows.Next() {
 		var actress model.Actress
-		err := rows.Scan(&actress.ID, &actress.Name, &actress.ImagePath, &actress.Vector)
+		err := rows.Scan(&actress.ID, &actress.Name, &actress.ImagePath)
 		if err != nil {
 			log.Println(err)
 		}
@@ -28,7 +28,7 @@ func FetchRecommendedActresses(ids []int) (recommendedActresses model.Actresses,
 			log.Println(err)
 		}
 		var actress model.Actress
-		err = row.Scan(&actress.ID, &actress.Name, &actress.ImagePath, &actress.Vector)
+		err = row.Scan(&actress.ID, &actress.Name, &actress.ImagePath)
 		if err != nil {
 			log.Println(err)
 		}
