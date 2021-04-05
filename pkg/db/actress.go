@@ -117,7 +117,7 @@ func getActressesDataFromText(fileName string) (names []string, err error) {
 
 // actressテーブルにレコードが存在するか否か
 func isExist() bool {
-	query := `SELECT COUNT(*) FROM actress`
+	query := `SELECT COUNT(*) FROM actresses`
 	rows, err := dbCon.Query(query)
 	if err != nil {
 		log.Fatalln(err)
