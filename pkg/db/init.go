@@ -14,20 +14,6 @@ var dbCon *sql.DB
 func init() {
 	// DBとBackendを接続
 	dbCon = NewDB()
-	// actressレコードが存在しなければデータを挿入する
-	isExist := isExist()
-	if !isExist {
-		// actressテーブルにデータ挿入
-		actressesFile := "./pkg/db/actress_id.txt"
-		names, err := getActressesDataFromText(actressesFile)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		err = insertActresses(names)
-		if err != nil {
-			log.Fatalln(err)
-		}
-	}
 }
 
 // Create a connection with MySQL
