@@ -2,11 +2,6 @@ FROM golang:1.15.0-alpine3.12
 
 WORKDIR /go/src/github.com/souhub/avzeus-backend
 
-RUN apk add --no-cache \
-    alpine-sdk \
-    git \
-    && go get github.com/oxequa/realize
-
 COPY . .
 
 RUN go build cmd
