@@ -45,7 +45,7 @@ func FetchRecommendedActresses(ids []int) (recommendedActresses model.Actresses,
 
 // Actressテーブルからレコードを全取得
 func fetchActressesRows() *sql.Rows {
-	query := `SELECT * FROM actresses`
+	query := parseSqlFile("actress/select_actresses")
 	rows, err := dbCon.Query(query)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -59,7 +59,7 @@ func fetchActressesRows() *sql.Rows {
 
 // 任意のレコードを１つActressテーブルから取得
 func fetchActressRow(id int) (row *sql.Row, err error) {
-	query := `SELECT * FROM actresses WHERE id=?`
+	query := parseSqlFile("actress/select_actress")
 	row = dbCon.QueryRow(query, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -72,7 +72,7 @@ func fetchActressRow(id int) (row *sql.Row, err error) {
 // 初期データを actresses テーブルに代入
 func initializeActresses() (err error) {
 	// sqlファイルからクエリ作成＋actresses テーブル作成
-	query := parseSqlFile("actresses")
+	query := parseSqlFile("actress/create_table")
 	_, err = dbCon.Exec(query)
 	if err != nil {
 		err = errors.New("Failed to create actresses table")

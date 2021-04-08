@@ -24,7 +24,7 @@ func isEmpty(tableName string) bool {
 
 // SQLファイルを読み込んでクエリ文字列を返す
 func parseSqlFile(fileName string) string {
-	filePath := fmt.Sprintf("./sql/create_table_%s.sql", fileName)
+	filePath := fmt.Sprintf("./sql/%s.sql", fileName)
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		msg := fmt.Sprintf("%sのSQLファイルの読み込みに失敗", fileName)

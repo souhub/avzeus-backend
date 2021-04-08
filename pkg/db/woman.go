@@ -28,7 +28,7 @@ func FetchWemen() (wemen model.Wemen) {
 
 // Fetch all rows from wemen table
 func fetchWemenRows() *sql.Rows {
-	query := `SELECT * FROM wemen`
+	query := parseSqlFile("woman/select_wemen")
 	rows, err := dbCon.Query(query)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -43,7 +43,7 @@ func fetchWemenRows() *sql.Rows {
 // 初期データを wemen テーブルに代入
 func initializeWemen() (err error) {
 	// sqlファイルからクエリ作成＋wemenテーブル作成
-	query := parseSqlFile("wemen")
+	query := parseSqlFile("woman/create_table")
 	_, err = dbCon.Exec(query)
 	if err != nil {
 		err = errors.New("Failed to create wemen table")

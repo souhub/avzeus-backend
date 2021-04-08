@@ -9,7 +9,7 @@ import (
 // Trainingテーブルの初期化
 func initializeTraining() (err error) {
 	// sqlファイルからクエリ作成＋trainingテーブル作成
-	query := parseSqlFile("training")
+	query := parseSqlFile("training/create_table")
 	_, err = dbCon.Exec(query)
 	if err != nil {
 		err = errors.New("Failed to create training table")
@@ -26,8 +26,7 @@ func InsertTraining(trainingData model.TrainingData) (id int, err error) {
 		return id, err
 	}
 	// INSERT クエリ実行
-	insertQuery := `INSERT INTO training (states, epsilons)
-				  	VALUES (?, ?)`
+	insertQuery := parseSqlFile("training/insert_training")
 	_, err = tx.Exec(insertQuery, trainingData.States, trainingData.Epsilons)
 	if err != nil {
 		tx.Rollback()
@@ -35,7 +34,7 @@ func InsertTraining(trainingData model.TrainingData) (id int, err error) {
 		return id, err
 	}
 	// SELECT クエリ実行
-	selectQuery := `SELECT LAST_INSERT_ID()`
+	selectQuery := parseSqlFile("training/select_last_insert_id")
 	row := tx.QueryRow(selectQuery)
 	// レコードをスキャンして返ってきたIDを取得
 	err = row.Scan(&id)
@@ -55,4 +54,15 @@ func InsertTraining(trainingData model.TrainingData) (id int, err error) {
 		return id, err
 	}
 	return id, nil
+}
+
+// 選択されたactressIDを挿入
+func InsertSelectedActressID(id, selectedID int) (err error) {
+	query := parseSqlFile("training/insert_selected_actress_id")
+	_, err = dbCon.Exec(query, selectedID, id)
+	if err != nil {
+		err = errors.New("Failed to insert selected actress id")
+		return err
+	}
+	return nil
 }
