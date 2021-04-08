@@ -6,6 +6,19 @@ import (
 	"github.com/souhub/avzeus-backend/pkg/model"
 )
 
+// Trainingテーブルの初期化
+func initializeTraining() (err error) {
+	// sqlファイルからクエリ作成＋trainingテーブル作成
+	query := parseSqlFile("training")
+	_, err = dbCon.Exec(query)
+	if err != nil {
+		err = errors.New("Failed to create training table")
+		return err
+	}
+	return nil
+}
+
+// Training data の挿入
 func InsertTraining(trainingData model.TrainingData) (id int, err error) {
 	// トランザクション開始
 	tx, err := dbCon.Begin()
@@ -15,19 +28,31 @@ func InsertTraining(trainingData model.TrainingData) (id int, err error) {
 	// INSERT クエリ実行
 	insertQuery := `INSERT INTO training (states, epsilons)
 				  	VALUES (?, ?)`
-	tx.Exec(insertQuery, trainingData.States, trainingData.Epsilons)
+	_, err = tx.Exec(insertQuery, trainingData.States, trainingData.Epsilons)
+	if err != nil {
+		tx.Rollback()
+		err = errors.New("Training data の挿入失敗")
+		return id, err
+	}
 	// SELECT クエリ実行
 	selectQuery := `SELECT LAST_INSERT_ID()`
-	tx.QueryRow(selectQuery)
+	row := tx.QueryRow(selectQuery)
+	// レコードをスキャンして返ってきたIDを代入
+	err = row.Scan(&id)
+	if err != nil {
+		tx.Rollback()
+		err = errors.New("Training data のID 取得失敗")
+		return id, err
+	}
 	// コミット
 	err = tx.Commit()
 	// エラー発生したらロールバックする
 	if err != nil {
+		err = errors.New("Failed to commit a training data")
 		if err = tx.Rollback(); err != nil {
 			err = errors.New("Failed to rollback")
 		}
 		return id, err
-	} else {
-		return id, nil
 	}
+	return id, nil
 }

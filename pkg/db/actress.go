@@ -1,9 +1,13 @@
 package db
 
 import (
+	"bufio"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/souhub/avzeus-backend/pkg/model"
 )
@@ -65,68 +69,67 @@ func fetchActressRow(id int) (row *sql.Row, err error) {
 	return row, err
 }
 
-// // Actressテーブルの初期データ挿入
-// func insertActresses(names []string) error {
-// 	// トランザクション開始
-// 	tx, err := dbCon.Begin()
-// 	if err != nil {
-// 		return err
-// 	}
+// 初期データを actresses テーブルに代入
+func initializeActresses() (err error) {
+	// sqlファイルからクエリ作成＋actresses テーブル作成
+	query := parseSqlFile("actresses")
+	_, err = dbCon.Exec(query)
+	if err != nil {
+		err = errors.New("Failed to create actresses table")
+		return err
+	}
 
-// 	// クエリ定義
-// 	query := `INSERT INTO actresses (name) VALUES (?)`
+	// actressesテーブルのレコードが空ならトランザクションでデータ挿入
+	if isEmpty("actresses") {
+		// トランザクション開始
+		tx, err := dbCon.Begin()
+		if err != nil {
+			err = errors.New("Failed to bigin a transaction")
+			return err
+		}
 
-// 	// 141人分トランザクションでInsertする
-// 	for _, name := range names {
-// 		tx.Exec(query, name)
-// 	}
+		// actresses_id.txt から名前を抽出
+		names := getActressesDataFromText("./actress_id.txt")
 
-// 	// コミット
-// 	err = tx.Commit()
-// 	// エラー発生したらロールバックする
-// 	if err != nil {
-// 		if err = tx.Rollback(); err != nil {
-// 			return err
-// 		}
-// 		return err
-// 	} else {
-// 		return nil
-// 	}
-// }
+		// 抽出した名前を全て actresses テーブルに insert
+		query = `INSERT INTO actresses (name) VALUES (?)`
+		for _, name := range names {
+			_, err = tx.Exec(query, name)
+			if err != nil {
+				err = errors.New("Failed to Insert actresses")
+				tx.Rollback()
+			}
+		}
+
+		// コミット
+		err = tx.Commit()
+		if err != nil {
+			err = errors.New("Failed to commit the transaction in actresses table")
+			err = tx.Rollback()
+			return err
+		}
+	}
+	// actressesテーブルが空じゃないなら終了
+	return nil
+}
 
 // actress_id.txtから名前を配列にしたものを取得
-// func getActressesDataFromText(fileName string) (names []string, err error) {
-// 	fp, err := os.Open(fileName)
-// 	if err != nil {
-// 		return names, err
-// 	}
-// 	defer fp.Close()
+func getActressesDataFromText(fileName string) (names []string) {
+	filePath := fmt.Sprintf("./seeds/%s", fileName)
+	fp, err := os.Open(filePath)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to get actresses data from %s", fileName)
+		err = errors.New(msg)
+		log.Fatalln(err)
+	}
+	defer fp.Close()
 
-// 	scanner := bufio.NewScanner(fp)
-// 	for scanner.Scan() {
-// 		line := scanner.Text()
-// 		actress := strings.Split(line, ":")
-// 		name := actress[1]
-// 		names = append(names, name)
-// 	}
-// 	return names, nil
-// }
-
-// actressテーブルにレコードが存在するか否か
-// func isExist() bool {
-// 	query := `SELECT COUNT(*) FROM actresses`
-// 	rows, err := dbCon.Query(query)
-// 	if err != nil {
-// 		log.Fatalln(err)
-// 	}
-// 	var count int
-// 	for rows.Next() {
-// 		if err := rows.Scan(&count); err != nil {
-// 			log.Fatal(err)
-// 		}
-// 	}
-// 	if count == 0 {
-// 		return false
-// 	}
-// 	return true
-// }
+	scanner := bufio.NewScanner(fp)
+	for scanner.Scan() {
+		line := scanner.Text()
+		actress := strings.Split(line, ":")
+		name := actress[1]
+		names = append(names, name)
+	}
+	return names
+}

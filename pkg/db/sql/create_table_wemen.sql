@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS wemen
+(
+    id INT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(50),
+    image_path VARCHAR(255),
+    PRIMARY KEY(id)
+);

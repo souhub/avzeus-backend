@@ -9,11 +9,28 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var dbCon *sql.DB
+// MySQLとBackendを接続
+var dbCon = NewDB()
 
 func init() {
-	// DBとBackendを接続
-	dbCon = NewDB()
+	// 初期化実行
+	initializeDB()
+}
+
+// データベースの初期化
+func initializeDB() {
+	err := initializeActresses()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = initializeWemen()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = initializeTraining()
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 // Create a connection with MySQL
