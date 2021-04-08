@@ -37,7 +37,7 @@ func InsertTraining(trainingData model.TrainingData) (id int, err error) {
 	// SELECT クエリ実行
 	selectQuery := `SELECT LAST_INSERT_ID()`
 	row := tx.QueryRow(selectQuery)
-	// レコードをスキャンして返ってきたIDを代入
+	// レコードをスキャンして返ってきたIDを取得
 	err = row.Scan(&id)
 	if err != nil {
 		tx.Rollback()
