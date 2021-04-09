@@ -13,5 +13,6 @@ func main() {
 	r.HandleFunc("/actresses", route.Actresses).Methods("GET")
 	r.HandleFunc("/wemen", route.Wemen).Methods("GET")
 	r.HandleFunc("/recommendation", route.GetRecommendationActresses).Methods("GET")
+	r.HandleFunc("/result", route.Result).Methods("POST")
 	log.Fatal(http.ListenAndServe(":8000", r))
 }

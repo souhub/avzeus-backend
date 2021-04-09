@@ -1,7 +1,9 @@
 package route
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -42,12 +44,12 @@ func Wemen(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// POST
-// /selection
+// GET
+// /recommendation
 func GetRecommendationActresses(w http.ResponseWriter, r *http.Request) {
 	// HTTPメソッド確認
 	if r.Method != "GET" {
-		endpoint := BackendURL + "/selection"
+		endpoint := FrontendURL + "/selection"
 		http.Redirect(w, r, endpoint, 301)
 		return
 	}
@@ -73,17 +75,27 @@ func GetRecommendationActresses(w http.ResponseWriter, r *http.Request) {
 	// AIサーバーにリクエストを投げて JSON を TrainingData 構造体で受ける
 	resp, err := http.Get(targeURL.String())
 	if err != nil {
-		log.Println("zeus.go line:84")
-		log.Fatalln(err)
+		err = errors.New("Failed to get a response from AI server")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Println("zeus.go line:92")
-		log.Fatalln(err)
+		err = errors.New("Failed to read a response from AI server")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 	var trainingData model.TrainingData
 	err = json.Unmarshal(body, &trainingData)
+	if err != nil {
+		err = errors.New("Failed to parse the recommended actresses data from AI server")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Trainingテーブルにstatesとepsilonsを保存＋ID返却
+	id, err := db.InsertTrainingData(trainingData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -97,14 +109,101 @@ func GetRecommendationActresses(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// idとrecommended_actressesを1つの構造体にまとめる
+	type RecommendedData struct {
+		RecommendedActresses model.Actresses `json:"recommended_actresses"`
+		ID                   int             `json:"id"`
+	}
+
+	data := RecommendedData{
+		RecommendedActresses: recommended_actresses,
+		ID:                   id,
+	}
+
 	// フロントエンドサーバーにJSONで返す
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Add("Accept-Charset", "utf-8")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
-	err = json.NewEncoder(w).Encode(recommended_actresses)
+	err = json.NewEncoder(w).Encode(data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
+}
+
+// POST
+// /result
+func Result(w http.ResponseWriter, r *http.Request) {
+	/// Validate a http method
+	if r.Method != "POST" {
+		http.Error(w, "This method isn't allowed for a GetResult handler", http.StatusMethodNotAllowed)
+		return
+	}
+	// リクエストをResult構造体に入れてパース
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		err = errors.New("Failed to parse a result")
+		log.Println(err)
+		return
+	}
+	var result model.Result
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		err = errors.New("Failed to unmarshal a result to the Result struct")
+		log.Println(err)
+		return
+	}
+	// resultsテーブルにtraining_idが登録されていなければresultデータ挿入
+	if db.IsResultExists(result.TrainingID) {
+		return
+	} else {
+		// DBに保存
+		if err = db.InsertResult(result); err != nil {
+			err = errors.New("Failed to insert a result to the Result struct")
+			log.Println(err)
+			return
+		}
+	}
+}
+
+func Training(trainingIDs []int) {
+	var trainingDatas []model.TrainingData
+	// training dataを配列で取得
+	for _, id := range trainingIDs {
+		// training_idが一致するstatesを取得
+		statesArr, err := db.FetchVectors("states", id)
+		if err != nil {
+			err = errors.New("Failed to fetch states from the db")
+			log.Println(err)
+			return
+		}
+		// training_idが一致するepsilonsを取得
+		epsilonsArr, err := db.FetchVectors("epsilons", id)
+		if err != nil {
+			err = errors.New("Failed to fetch epsilons from the db")
+			log.Println(err)
+			return
+		}
+		// Training構造体に代入してJSONでAIにPOST
+		trainingData := model.TrainingData{
+			ID:       id,
+			States:   statesArr,
+			Epsilons: epsilonsArr,
+		}
+		trainingDatas = append(trainingDatas, trainingData)
+	}
+	// training dataを解析
+	jsonTrainingDatas, err := json.Marshal(trainingDatas)
+	if err != nil {
+		err = errors.New("Failed to convert TrainingDatas struct to JSON")
+		log.Println(err)
+		return
+	}
+	// POSTのボディ用意
+	postBody := bytes.NewBuffer(jsonTrainingDatas)
+	endpoint := AIURL + "/training"
+	// AIサーバーにPOSTリクエスト送信
+	http.Post(endpoint, "application/json", postBody)
+	log.Println(jsonTrainingDatas)
 }

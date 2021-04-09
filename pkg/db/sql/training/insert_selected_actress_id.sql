@@ -1,1 +1,1 @@
-INSERT INTO TrainingData (selected_actress_id) VALUES (?) WHERE id=?;
+INSERT INTO results (val, training_id) VALUES (?, ?);

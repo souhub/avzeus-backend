@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -13,6 +14,17 @@ import (
 var dbCon = NewDB()
 
 func init() {
+	// DBのセットアップ完了まで初期化処理を待たせる
+	log.Println("The init function in db package is now working")
+	for {
+		err := dbCon.Ping()
+		if err != nil {
+			log.Println("Waiting for setting up a database...")
+			time.Sleep(3 * time.Second)
+		} else {
+			break
+		}
+	}
 	// 初期化実行
 	initializeDB()
 }
@@ -28,6 +40,18 @@ func initializeDB() {
 		log.Fatalln(err)
 	}
 	err = initializeTraining()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = initializeStates()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = initializeEpsilons()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	err = initializeResults()
 	if err != nil {
 		log.Fatalln(err)
 	}

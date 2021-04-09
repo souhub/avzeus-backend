@@ -12,6 +12,50 @@ import (
 	"github.com/souhub/avzeus-backend/pkg/model"
 )
 
+// 初期データを actresses テーブルに代入
+func initializeActresses() (err error) {
+	// sqlファイルからクエリ作成＋actresses テーブル作成
+	query := parseSqlFile("actress/create_table")
+	dbCon.Exec(query)
+	if err != nil {
+		err = errors.New("Failed to create actresses table")
+		return err
+	}
+
+	// actressesテーブルのレコードが空ならトランザクションでデータ挿入
+	if isEmpty("actresses") {
+		// トランザクション開始
+		tx, err := dbCon.Begin()
+		if err != nil {
+			err = errors.New("Failed to bigin a transaction in actresses")
+			return err
+		}
+
+		// actresses_id.txt から名前を抽出
+		names := getActressesDataFromText("./actress_id.txt")
+
+		// 抽出した名前を全て actresses テーブルに insert
+		query = `INSERT INTO actresses (name) VALUES (?)`
+		for _, name := range names {
+			_, err = tx.Exec(query, name)
+			if err != nil {
+				err = errors.New("Failed to Insert actresses")
+				tx.Rollback()
+			}
+		}
+
+		// コミット
+		err = tx.Commit()
+		if err != nil {
+			err = errors.New("Failed to commit the transaction in actresses table")
+			tx.Rollback()
+		}
+		return err
+	}
+	// actressesテーブルが空じゃないなら終了
+	return nil
+}
+
 // Actressを全県取得し、構造体に入れて返す
 func FetchActresses() (actresses model.Actresses) {
 	rows := fetchActressesRows()
@@ -36,7 +80,7 @@ func FetchRecommendedActresses(ids []int) (recommendedActresses model.Actresses,
 		var actress model.Actress
 		err = row.Scan(&actress.ID, &actress.Name, &actress.ImagePath)
 		if err != nil {
-			log.Println(err)
+			// log.Println(err)
 		}
 		recommendedActresses = append(recommendedActresses, actress)
 	}
@@ -69,53 +113,9 @@ func fetchActressRow(id int) (row *sql.Row, err error) {
 	return row, err
 }
 
-// 初期データを actresses テーブルに代入
-func initializeActresses() (err error) {
-	// sqlファイルからクエリ作成＋actresses テーブル作成
-	query := parseSqlFile("actress/create_table")
-	_, err = dbCon.Exec(query)
-	if err != nil {
-		err = errors.New("Failed to create actresses table")
-		return err
-	}
-
-	// actressesテーブルのレコードが空ならトランザクションでデータ挿入
-	if isEmpty("actresses") {
-		// トランザクション開始
-		tx, err := dbCon.Begin()
-		if err != nil {
-			err = errors.New("Failed to bigin a transaction")
-			return err
-		}
-
-		// actresses_id.txt から名前を抽出
-		names := getActressesDataFromText("./actress_id.txt")
-
-		// 抽出した名前を全て actresses テーブルに insert
-		query = `INSERT INTO actresses (name) VALUES (?)`
-		for _, name := range names {
-			_, err = tx.Exec(query, name)
-			if err != nil {
-				err = errors.New("Failed to Insert actresses")
-				tx.Rollback()
-			}
-		}
-
-		// コミット
-		err = tx.Commit()
-		if err != nil {
-			err = errors.New("Failed to commit the transaction in actresses table")
-			err = tx.Rollback()
-			return err
-		}
-	}
-	// actressesテーブルが空じゃないなら終了
-	return nil
-}
-
 // actress_id.txtから名前を配列にしたものを取得
 func getActressesDataFromText(fileName string) (names []string) {
-	filePath := fmt.Sprintf("./seeds/%s", fileName)
+	filePath := fmt.Sprintf("./pkg/db/seeds/%s", fileName)
 	fp, err := os.Open(filePath)
 	if err != nil {
 		msg := fmt.Sprintf("Failed to get actresses data from %s", fileName)
@@ -132,4 +132,20 @@ func getActressesDataFromText(fileName string) (names []string) {
 		names = append(names, name)
 	}
 	return names
+}
+
+// resultsテーブルに同じtraining_idがあるか否か
+func IsResultExists(trainingID int) bool {
+	query := `SELECT id FROM results WHERE training_id=? LIMIT 1`
+	row := dbCon.QueryRow(query, trainingID)
+	var id int
+	if err := row.Scan(&id); err != nil {
+		err = errors.New("Failed to scan a result rows")
+		log.Println(err)
+		return false
+	}
+	if id == 0 {
+		return false
+	}
+	return true
 }
