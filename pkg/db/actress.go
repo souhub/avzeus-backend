@@ -63,7 +63,7 @@ func FetchActresses() (actresses model.Actresses) {
 		var actress model.Actress
 		err := rows.Scan(&actress.ID, &actress.Name, &actress.ImagePath)
 		if err != nil {
-			log.Println(err)
+			// log.Println(err)
 		}
 		actresses = append(actresses, actress)
 	}

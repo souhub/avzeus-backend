@@ -44,18 +44,35 @@ func Wemen(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GET
+// POST
 // /recommendation
 func GetRecommendationActresses(w http.ResponseWriter, r *http.Request) {
 	// HTTPメソッド確認
-	if r.Method != "GET" {
+	log.Println(r.Method)
+	if r.Method != "POST" {
 		endpoint := FrontendURL + "/selection"
-		http.Redirect(w, r, endpoint, 301)
+		http.Redirect(w, r, endpoint, http.StatusMethodNotAllowed)
 		return
 	}
 	// クエリを取得
-	requestedQuery := r.URL.Query()
-	selectedWemenDataStr := requestedQuery.Get("selected_wemen_ids")
+	// requestedQuery := r.URL.Query()
+	// selectedWemenDataStr := requestedQuery.Get("selected_wemen_ids")
+
+	// リクエストボディをパース
+	reqbody, err := ioutil.ReadAll(r.Body)
+	// field名は小文字だとjsonタグを付けてもアクセスできないためパース失敗する
+	// struct名大文字でも小文字でもどちらでもいい
+	type requestedData struct {
+		SelectedWemenDataStr string `json:"selected_wemen_ids"`
+	}
+	var reqData requestedData
+	err = json.Unmarshal(reqbody, &reqData)
+	if err != nil {
+		err = errors.New("Failed to read a body of a recommendation reques")
+		log.Println(err)
+		return
+	}
+	selectedWemenDataStr := reqData.SelectedWemenDataStr
 
 	//  フォームで5人選択されているかチェック
 	checkSelectionForm(selectedWemenDataStr, w, r)
@@ -64,7 +81,7 @@ func GetRecommendationActresses(w http.ResponseWriter, r *http.Request) {
 	target := "recommendation"
 	targeURL, err := url.Parse(AIURL)
 	if err != nil {
-		log.Println("zeus.go line:73")
+		err = errors.New("Failed to create a recommendation request for AI")
 		log.Fatalln(err)
 	}
 	targeURL.Path = path.Join(targeURL.Path, target)
@@ -140,30 +157,30 @@ func Result(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "This method isn't allowed for a GetResult handler", http.StatusMethodNotAllowed)
 		return
 	}
-	// リクエストをResult構造体に入れてパース
+	// リクエストボディをResult構造体に入れてパース
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		err = errors.New("Failed to parse a result")
+		err = errors.New("Failed to read a result")
 		log.Println(err)
 		return
 	}
 	var result model.Result
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		err = errors.New("Failed to unmarshal a result to the Result struct")
+		err = errors.New("Failed to parse a result to the Result struct")
 		log.Println(err)
 		return
 	}
-	// resultsテーブルにtraining_idが登録されていなければresultデータ挿入
+	// resultsテーブルにtraining_idが登録されているか
+	// 登録されていれば終了
 	if db.IsResultExists(result.TrainingID) {
 		return
-	} else {
-		// DBに保存
-		if err = db.InsertResult(result); err != nil {
-			err = errors.New("Failed to insert a result to the Result struct")
-			log.Println(err)
-			return
-		}
+	}
+	// 登録されていなければresultをDBに保存
+	if err = db.InsertResult(result); err != nil {
+		err = errors.New("Failed to insert a result to the Result struct")
+		log.Println(err)
+		return
 	}
 }
 
