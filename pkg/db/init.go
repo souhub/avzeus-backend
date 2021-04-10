@@ -15,7 +15,6 @@ var dbCon = NewDB()
 
 func init() {
 	// DBのセットアップ完了まで初期化処理を待たせる
-	log.Println("The init function in db package is now working")
 	for {
 		err := dbCon.Ping()
 		if err != nil {
@@ -27,6 +26,7 @@ func init() {
 	}
 	// 初期化実行
 	initializeDB()
+	log.Println("DB initialization was completed")
 }
 
 // データベースの初期化

@@ -202,3 +202,22 @@ func FetchVectors(name string, trainingID int) (vectorsArr []float64, err error)
 	}
 	return vectorsArr, nil
 }
+
+// 1週間分のrainingテーブルのIDを返す（AI学習用）
+func FetchTrainingIDsForOneWeek() (ids []int, err error) {
+	query := parseSqlFile("training/select_training_for_one_week")
+	rows, err := dbCon.Query(query)
+	if err != nil {
+		return ids, err
+	}
+	for rows.Next() {
+		var training model.TrainingData
+		err := rows.Scan(&training.ID)
+		if err != nil {
+			return ids, err
+		}
+		id := training.ID
+		ids = append(ids, id)
+	}
+	return ids, nil
+}

@@ -1,0 +1,1 @@
+SELECT ID FROM training WHERE created_at BETWEEN(NOW()-INTERVAL 7 HOUR) AND NOW();

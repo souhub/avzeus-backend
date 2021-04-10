@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"time"
 
 	"github.com/souhub/avzeus-backend/pkg/db"
 	"github.com/souhub/avzeus-backend/pkg/model"
@@ -184,9 +185,20 @@ func Result(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func Training(trainingIDs []int) {
+// 1週間に1回学習させる(AI学習用)
+func init() {
+	go makeAILearn()
+}
+
+// TrainingデータをAIにPOST(AI学習用)
+func postTrainingData() {
+	// 1週間分のTrainingデータIDを配列で取得
+	trainingIDs, err := db.FetchTrainingIDsForOneWeek()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	// ID配列をもとにTraining IDと一致するstate,epsilon取得
 	var trainingDatas []model.TrainingData
-	// training dataを配列で取得
 	for _, id := range trainingIDs {
 		// training_idが一致するstatesを取得
 		statesArr, err := db.FetchVectors("states", id)
@@ -221,6 +233,26 @@ func Training(trainingIDs []int) {
 	postBody := bytes.NewBuffer(jsonTrainingDatas)
 	endpoint := AIURL + "/training"
 	// AIサーバーにPOSTリクエスト送信
-	http.Post(endpoint, "application/json", postBody)
-	log.Println(jsonTrainingDatas)
+	resp, err := http.Post(endpoint, "application/json", postBody)
+	if err != nil {
+		log.Println(err)
+		log.Println("The AI was failed to learn because of a request error")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("The AI was Failed to learn because of status code was unhealthy. Status code=%d", resp.StatusCode)
+		log.Println("The AI was failed to learn")
+		return
+	}
+	log.Println("The AI has successfully learned")
+}
+
+// ゴルーチンさせる関数(AI学習用)
+func makeAILearn() {
+	for {
+		// 1週間待つ
+		time.Sleep(604800 * time.Second)
+		// 実行
+		postTrainingData()
+	}
 }
