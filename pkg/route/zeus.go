@@ -187,7 +187,7 @@ func Result(w http.ResponseWriter, r *http.Request) {
 
 // 1週間に1回学習させる(AI学習用)
 func init() {
-	go makeAILearn()
+	go learn()
 }
 
 // TrainingデータをAIにPOST(AI学習用)
@@ -231,7 +231,7 @@ func postTrainingData() {
 	}
 	// POSTのボディ用意
 	postBody := bytes.NewBuffer(jsonTrainingDatas)
-	endpoint := AIURL + "/training"
+	endpoint := AIURL + "/learning"
 	// AIサーバーにPOSTリクエスト送信
 	resp, err := http.Post(endpoint, "application/json", postBody)
 	if err != nil {
@@ -248,7 +248,7 @@ func postTrainingData() {
 }
 
 // ゴルーチンさせる関数(AI学習用)
-func makeAILearn() {
+func learn() {
 	for {
 		// 1週間待つ
 		time.Sleep(604800 * time.Second)
