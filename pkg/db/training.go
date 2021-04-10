@@ -184,7 +184,7 @@ func InsertResult(result model.Result) (err error) {
 
 // training_idが一致するstatesまたはepsilonsを全て取得
 func FetchVectors(name string, trainingID int) (vectorsArr []float64, err error) {
-	filePath := fmt.Sprintf("training/select_%s.sql", name)
+	filePath := fmt.Sprintf("training/select_%s", name)
 	query := parseSqlFile(filePath)
 	rows, err := dbCon.Query(query, trainingID)
 	if err != nil {
@@ -211,13 +211,25 @@ func FetchTrainingIDsForOneWeek() (ids []int, err error) {
 		return ids, err
 	}
 	for rows.Next() {
-		var training model.TrainingData
-		err := rows.Scan(&training.ID)
+		var id int
+		err := rows.Scan(&id)
 		if err != nil {
 			return ids, err
 		}
-		id := training.ID
 		ids = append(ids, id)
 	}
 	return ids, nil
+}
+
+// resultsテーブルに同じtraining_idがあるか否か
+func IsResultExists(trainingID int) bool {
+	query := `SELECT id FROM results WHERE training_id=? LIMIT 1`
+	row := dbCon.QueryRow(query, trainingID)
+	var id int
+	if err := row.Scan(&id); err != nil {
+		log.Printf("%s. This is a validation of result table,NOT an error", err)
+		log.Println(err)
+		return false
+	}
+	return true
 }

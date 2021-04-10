@@ -133,19 +133,3 @@ func getActressesDataFromText(fileName string) (names []string) {
 	}
 	return names
 }
-
-// resultsテーブルに同じtraining_idがあるか否か
-func IsResultExists(trainingID int) bool {
-	query := `SELECT id FROM results WHERE training_id=? LIMIT 1`
-	row := dbCon.QueryRow(query, trainingID)
-	var id int
-	if err := row.Scan(&id); err != nil {
-		err = errors.New("Failed to scan a result rows")
-		log.Println(err)
-		return false
-	}
-	if id == 0 {
-		return false
-	}
-	return true
-}

@@ -32,6 +32,7 @@ func parseSqlFile(fileName string) string {
 	filePath := fmt.Sprintf("./pkg/db/sql/%s.sql", fileName)
 	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
+		log.Println(err)
 		msg := fmt.Sprintf("%sのSQLファイルの読み込みに失敗", fileName)
 		err = errors.New(msg)
 		log.Fatalln(err)

@@ -239,12 +239,13 @@ func postTrainingData() {
 		log.Println("The AI was failed to learn because of a request error")
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		log.Printf("The AI was Failed to learn because of status code was unhealthy. Status code=%d", resp.StatusCode)
-		log.Println("The AI was failed to learn")
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		err = errors.New("Failed to read a response of learning result from AI server")
+		log.Println(err)
 		return
 	}
-	log.Println("The AI has successfully learned")
+	log.Printf("%s", respBody)
 }
 
 // ゴルーチンさせる関数(AI学習用)
