@@ -19,7 +19,7 @@ services:
       - "8000:8000"
 
   ai:
-    image: souhub/avzeus-ai:test
+    image: souhub/avzeus-ai_dev:latest
     tty: true
     ports:
       - "5000:5000"

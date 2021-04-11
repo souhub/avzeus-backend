@@ -188,6 +188,7 @@ func FetchVectors(name string, trainingID int) (vectorsArr []float64, err error)
 	query := parseSqlFile(filePath)
 	rows, err := dbCon.Query(query, trainingID)
 	if err != nil {
+		log.Println(err)
 		msg := fmt.Sprintf("Failed to get %s from the database", name)
 		err = errors.New(msg)
 		return vectorsArr, err
@@ -201,6 +202,18 @@ func FetchVectors(name string, trainingID int) (vectorsArr []float64, err error)
 		vectorsArr = append(vectorsArr, vector.Val)
 	}
 	return vectorsArr, nil
+}
+
+// training_idが一致するresultを取得
+func FetchResult(trainingID int) (val int, err error) {
+	filePath := "training/select_result"
+	query := parseSqlFile(filePath)
+	row := dbCon.QueryRow(query, trainingID)
+	if err = row.Scan(&val); err != nil {
+		err = errors.New("Failed to get val from results table")
+		return val, err
+	}
+	return val, err
 }
 
 // 1週間分のrainingテーブルのIDを返す（AI学習用）

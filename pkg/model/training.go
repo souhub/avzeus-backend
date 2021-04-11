@@ -4,7 +4,7 @@ type TrainingData struct {
 	ID                      int       `json:"id"`
 	States                  []float64 `json:"states"`
 	Epsilons                []float64 `json:"epsilons"`
-	Result                  Result    `json:"result"`
+	Result                  int       `json:"result"`
 	RecommendedActressesIDs []int     `json:"recommended_actresses_ids"`
 }
 type Vector struct {
