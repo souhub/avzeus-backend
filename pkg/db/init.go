@@ -65,7 +65,7 @@ func NewDB() *sql.DB {
 	dbEndpoint := os.Getenv("DB_ENDPOINT")
 	dbPort := os.Getenv("DB_PORT")
 	dbName := os.Getenv("DB_NAME")
-	dsn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", dBUser, dBPass, dbProtocol, dbEndpoint, dbPort, dbName)
+	dsn := fmt.Sprintf("%s:%s@%s(%s:%s)/%s", dBUser, dBPass, dbProtocol, dbEndpoint, dbPort, dbName)
 	dbCon, err := sql.Open("mysql", dsn)
 	if err != nil {
 		log.Fatal(err)

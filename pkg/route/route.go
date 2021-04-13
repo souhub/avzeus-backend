@@ -19,9 +19,6 @@ import (
 // /actress
 func Actresses(w http.ResponseWriter, r *http.Request) {
 	actresses := db.FetchActresses()
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Accept-Charset", "utf-8")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	err := json.NewEncoder(w).Encode(actresses)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -34,9 +31,6 @@ func Actresses(w http.ResponseWriter, r *http.Request) {
 // /wemen
 func Wemen(w http.ResponseWriter, r *http.Request) {
 	wemen := db.FetchWemen()
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Accept-Charset", "utf-8")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	err := json.NewEncoder(w).Encode(wemen)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -49,31 +43,29 @@ func Wemen(w http.ResponseWriter, r *http.Request) {
 // /recommendation
 func GetRecommendationActresses(w http.ResponseWriter, r *http.Request) {
 	// HTTPメソッド確認
-	log.Println(r.Method)
-	if r.Method != "POST" {
-		endpoint := FrontendURL + "/selection"
-		http.Redirect(w, r, endpoint, http.StatusMethodNotAllowed)
-		return
-	}
+	// if r.Method != "POST" {
+	// 	endpoint := FrontendURL + "/selection"
+	// 	http.Redirect(w, r, endpoint, http.StatusMethodNotAllowed)
+	// 	return
+	// }
 	// クエリを取得
-	// requestedQuery := r.URL.Query()
-	// selectedWemenDataStr := requestedQuery.Get("selected_wemen_ids")
-
+	requestedQuery := r.URL.Query()
+	selectedWemenDataStr := requestedQuery.Get("selected_wemen_ids")
 	// リクエストボディをパース
-	reqbody, err := ioutil.ReadAll(r.Body)
-	// field名は小文字だとjsonタグを付けてもアクセスできないためパース失敗する
-	// struct名大文字でも小文字でもどちらでもいい
-	type requestedData struct {
-		SelectedWemenDataStr string `json:"selected_wemen_ids"`
-	}
-	var reqData requestedData
-	err = json.Unmarshal(reqbody, &reqData)
-	if err != nil {
-		err = errors.New("Failed to read a body of a recommendation reques")
-		log.Println(err)
-		return
-	}
-	selectedWemenDataStr := reqData.SelectedWemenDataStr
+	// reqbody, err := ioutil.ReadAll(r.Body)
+	// // field名は小文字だとjsonタグを付けてもアクセスできないためパース失敗する
+	// // struct名大文字でも小文字でもどちらでもいい
+	// type requestedData struct {
+	// 	SelectedWemenDataStr string `json:"selected_wemen_ids"`
+	// }
+	// var reqData requestedData
+	// err = json.Unmarshal(reqbody, &reqData)
+	// if err != nil {
+	// 	err = errors.New("Failed to read a body of a recommendation reques")
+	// 	log.Println(err)
+	// 	return
+	// }
+	// selectedWemenDataStr := reqData.SelectedWemenDataStr
 
 	//  フォームで5人選択されているかチェック
 	checkSelectionForm(selectedWemenDataStr, w, r)
@@ -139,9 +131,6 @@ func GetRecommendationActresses(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// フロントエンドサーバーにJSONで返す
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Add("Accept-Charset", "utf-8")
-	w.Header().Add("Access-Control-Allow-Origin", "*")
 	err = json.NewEncoder(w).Encode(data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

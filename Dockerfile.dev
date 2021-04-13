@@ -25,7 +25,7 @@ ENV BACKEND_URL http://backend:8000
 
 ENV AI_URL http://ai:5000
 
-ENV FRONTEND_URL http://frontend:8080
+ENV FRONTEND_URL http://localhost:8080
 
 COPY . .
 

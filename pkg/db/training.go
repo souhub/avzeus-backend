@@ -173,7 +173,7 @@ func insertVectors(vectors model.Vectors, typeName string) (err error) {
 
 // 選択されたactressIDを挿入
 func InsertResult(result model.Result) (err error) {
-	query := parseSqlFile("training/insert_selected_actress_id")
+	query := parseSqlFile("training/insert_result")
 	_, err = dbCon.Exec(query, result.Val, result.TrainingID)
 	if err != nil {
 		err = errors.New("Failed to insert a selected actress id")
@@ -240,8 +240,7 @@ func IsResultExists(trainingID int) bool {
 	row := dbCon.QueryRow(query, trainingID)
 	var id int
 	if err := row.Scan(&id); err != nil {
-		log.Printf("%s. This is a validation of result table,NOT an error", err)
-		log.Println(err)
+		log.Printf("NOT ERROR: This is a validation of result table. The result which has the trainingID was already registerd.")
 		return false
 	}
 	return true
