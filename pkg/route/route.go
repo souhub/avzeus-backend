@@ -41,7 +41,7 @@ func Wemen(w http.ResponseWriter, r *http.Request) {
 
 // POST
 // /recommendation
-func GetRecommendationActresses(w http.ResponseWriter, r *http.Request) {
+func Recommendation(w http.ResponseWriter, r *http.Request) {
 	// HTTPメソッド確認
 	// if r.Method != "POST" {
 	// 	endpoint := FrontendURL + "/selection"

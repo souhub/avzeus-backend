@@ -13,7 +13,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/actresses", route.Actresses)
 	mux.HandleFunc("/api/wemen", route.Wemen)
-	mux.HandleFunc("/api/recommendation", route.GetRecommendationActresses)
+	mux.HandleFunc("/api/recommendation", route.Recommendation)
 	mux.HandleFunc("/api/result", route.Result)
 
 	// CORSポリシー対策でフロントエンドからのAjax通信のみ許可する
