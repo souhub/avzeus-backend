@@ -6,18 +6,6 @@ COPY . .
 
 RUN go build cmd
 
-ENV DB_USER dbmasteruser
-
-ENV DB_PASS )m&57>5XfFu]7922z3>,op1{HXoPcoX7
-
-ENV DB_PROTOCOL tcp
-
-ENV DB_ENDPOINT ls-4eec5a0b62700bee1c4159caae9f1ffd3b1dc668.crqfsr0qwzrh.us-east-1.rds.amazonaws.com
-
-ENV DB_PORT 3306
-
-ENV DB_NAME dbavzeus
-
 ENV CLOUD_STORAGE_PATH https://storage.googleapis.com/avzeus
 
 ENV BACKEND_URL http://localhost:8000
