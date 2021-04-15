@@ -21,7 +21,7 @@ ENV DB_NAME avzeus
 
 ENV CLOUD_STORAGE_PATH https://storage.googleapis.com/avzeus
 
-ENV BACKEND_URL http://backend:8000
+ENV BACKEND_URL http://backend:8000do
 
 ENV AI_URL http://ai:5000
 
