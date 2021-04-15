@@ -77,3 +77,9 @@ func fetchWemenRows() *sql.Rows {
 	}
 	return rows
 }
+
+func resetWemen() (err error) {
+	query := `DELETE FROM wemen`
+	_, err = dbCon.Exec(query)
+	return err
+}
