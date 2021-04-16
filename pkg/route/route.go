@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/souhub/avzeus-backend/pkg/db"
+	"github.com/souhub/avzeus-backend/pkg/dmm"
 	"github.com/souhub/avzeus-backend/pkg/model"
 )
 
@@ -105,7 +106,7 @@ func Recommendation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Trainingテーブルにstatesとepsilonsを保存＋ID返却
-	id, err := db.InsertTrainingData(trainingData)
+	trainingID, err := db.InsertTrainingData(trainingData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -119,18 +120,24 @@ func Recommendation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 推薦された女優データにDMMのデータを追加
+	recommended_actresses, err = dmm.AddDataToActresses(recommended_actresses)
+	if err != nil {
+		log.Println(err)
+	}
+
 	// idとrecommended_actressesを1つの構造体にまとめる
 	type RecommendedData struct {
 		RecommendedActresses model.Actresses `json:"recommended_actresses"`
-		ID                   int             `json:"id"`
+		TrainingID           int             `json:"training_id"`
 	}
 
 	data := RecommendedData{
 		RecommendedActresses: recommended_actresses,
-		ID:                   id,
+		TrainingID:           trainingID,
 	}
 
-	// フロントエンドサーバーにJSONで返す
+	// フロントエンドサーバーにアクセスさせるエンドポイントにJSONでおいていく
 	err = json.NewEncoder(w).Encode(data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
