@@ -15,7 +15,7 @@ func main() {
 	mux.HandleFunc("/api/wemen", route.Wemen)
 	mux.HandleFunc("/api/recommendation", route.Recommendation)
 	mux.HandleFunc("/api/result", route.Result)
-
+	mux.HandleFunc("/api/image-clipping", route.ImageClipping)
 	// CORSポリシー対策でフロントエンドからのAjax通信のみ許可する
 	frontEndURL := os.Getenv("FRONTEND_URL")
 	c := cors.New(cors.Options{

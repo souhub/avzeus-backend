@@ -15,11 +15,33 @@ services:
       - mysql
     volumes:
       - ./:/go/src/github.com/souhub/avzeus-backend
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_ENDPOINT: ${DB_ENDPOINT}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      CLOUD_STORAGE_PATH: ${CLOUD_STORAGE_PATH}
+      BACKEND_URL: ${BACKEND_URL}
+      AI_URL: ${AI_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      DMM_API_ID: ${DMM_API_ID}
+      DMM_AFFILIATE_ID: ${DMM_AFFILIATE_ID}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      S3_BUCKET_URL: ${S3_BUCKET_URL}
     ports:
       - "8000:8000"
 
   ai:
     image: souhub/avzeus-ai_dev:latest
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
     tty: true
     ports:
       - "5000:5000"
@@ -31,5 +53,8 @@ services:
   #     - mysql
   #     - backend
   #     - ai
+  #   environment:
+  #     AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+  #     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
   #   ports:
   #     - "8080:80"

@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"path"
-	"time"
 
+	"github.com/google/uuid"
 	"github.com/souhub/avzeus-backend/pkg/db"
 	"github.com/souhub/avzeus-backend/pkg/dmm"
 	"github.com/souhub/avzeus-backend/pkg/model"
@@ -46,7 +47,7 @@ func Recommendation(w http.ResponseWriter, r *http.Request) {
 	// HTTPメソッド確認
 	if r.Method != "POST" {
 		endpoint := FrontendURL + "/selection"
-		http.Redirect(w, r, endpoint, http.StatusMethodNotAllowed)
+		http.Redirect(w, r, endpoint, http.StatusTemporaryRedirect)
 		return
 	}
 	// クエリを取得
@@ -119,7 +120,6 @@ func Recommendation(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	// 推薦された女優データにDMMのデータを追加
 	recommended_actresses, err = dmm.AddDataToActresses(recommended_actresses)
 	if err != nil {
@@ -144,6 +144,124 @@ func Recommendation(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
+}
+
+// POST
+// /image-clipping
+func ImageClipping(w http.ResponseWriter, r *http.Request) {
+	// メソッド確認
+	if r.Method != "POST" {
+		err := errors.New("Uplading an image allow only POST method")
+		http.Error(w, err.Error(), http.StatusMethodNotAllowed)
+		return
+	}
+	// フォームから画像を受け取る
+	// FormFileは必要に応じて自動的にParseMultipleFormかParseFromを呼び出す
+	file, fileHeader, err := r.FormFile("image")
+	if err != nil {
+		msg := fmt.Sprintf("Failed to receive an image from image-uploader form. %s", err)
+		err = errors.New(msg)
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+	// ファイル名が一意になるようにUUIDを用いて変更
+	// MTCNN(画像切り抜きAI)は拡張子がない保存パスを受け取るとエラーになるためここで対応しておく
+	fileName := fileHeader.Filename
+	ext := path.Ext(fileName)
+	if ext == "" {
+		log.Fatalln("No extension")
+	}
+	fileName = uuid.NewString() + ext
+
+	// imagePath := fmt.Sprintf("tmp/%s", fileName)
+	imagePath := fileName
+	// S3にアップロード
+	if err = s3Upload(imagePath, file); err != nil {
+		log.Fatalln(err)
+	}
+	log.Println("Upload a file to S3 was completed.")
+	// AIサーバーにPOSTするJSONの準備
+	type ImageData struct {
+		ImagePath string `json:"image_path"`
+	}
+	// 一時保存場所の絶対パスを作る
+	imageURL, err := createURL(S3URL, nil, fileName)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	imageData := ImageData{
+		// S3のオブジェクトキー"がtmp/[filename]"と表されるからimagePathをAIサーバーに渡す
+		ImagePath: imagePath,
+	}
+	jsonImageData, err := json.Marshal(imageData)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to marshal an image path to JSON. %s", err)
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+	// POSTのボディ用意
+	postBody := bytes.NewBuffer(jsonImageData)
+	endpoint, err := createURL(AIURL, nil, "image-clipping")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Println("Preparing for a request to AI was completed.")
+
+	// AIサーバーにPOSTリクエスト送信
+	resp, err := http.Post(endpoint, "application/json", postBody)
+	if err != nil {
+		log.Println(err)
+		log.Println("The AI was failed to learn because of a request error")
+	}
+	defer resp.Body.Close()
+
+	log.Println("Sending a request to AI was completed.")
+	// レスポンスボディを解析
+	respBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	type RespParser struct {
+		IDs []int `json:"ids"`
+	}
+	respParser := new(RespParser)
+	if err = json.Unmarshal(respBody, respParser); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	ids := respParser.IDs
+	idsStr := ""
+	for _, id := range ids {
+		idStr := fmt.Sprintf("%d ", id)
+		idsStr += idStr
+	}
+
+	log.Println("Parsing a response from AI was completed.")
+
+	// 画像の一時保存場所のURLと、AIから受け取ったID配列とをURLに乗せてフロントエンドにリダイレクト
+	queries := map[string]string{
+		"ids":        idsStr,
+		"image_path": imageURL,
+	}
+	if queries["ids"] == "" {
+		err = s3Delete(fileName)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		redirectURL, err := createURL(FrontendURL, nil, "image-uploader")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		http.Redirect(w, r, redirectURL, http.StatusSeeOther)
+	}
+	redirectURL, err := createURL(FrontendURL, queries, "image-uploader")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	http.Redirect(w, r, redirectURL, http.StatusSeeOther)
 }
 
 // POST
@@ -179,94 +297,4 @@ func Result(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-}
-
-// 1週間に1回学習させる(AI学習用)
-func init() {
-	go learn()
-}
-
-// ゴルーチンさせる関数(AI学習用)
-func learn() {
-	for {
-		// 1週間待つ
-		time.Sleep(604800 * time.Second)
-		// 実行
-		postTrainingData()
-	}
-}
-
-// TrainingデータをAIにPOST(AI学習用)
-func postTrainingData() {
-	// 1週間分のTrainingデータIDを配列で取得
-	trainingIDs, err := db.FetchTrainingIDsForOneWeek()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	// ID配列をもとにTraining IDと一致するstate,epsilon取得
-	var trainingDatas []model.TrainingData
-	for _, id := range trainingIDs {
-		// training_idが一致するvalをresultsテーブルから取得
-		// errが起きた場合、resultsのval存在しない＝どの女優リンクもクリックされてないのでAIにデータを渡さない
-		resultVal, err := db.FetchResult(id)
-		if err != nil {
-			log.Println(err)
-			err = errors.New("Failed to fetch result from the db")
-			continue
-		}
-		log.Println(resultVal)
-		// training_idが一致するstatesを取得
-		statesArr, err := db.FetchVectors("states", id)
-		if err != nil {
-			err = errors.New("Failed to fetch states from the db")
-			log.Println(err)
-			return
-		}
-		// training_idが一致するepsilonsを取得
-		epsilonsArr, err := db.FetchVectors("epsilons", id)
-		if err != nil {
-			err = errors.New("Failed to fetch epsilons from the db")
-			log.Println(err)
-			return
-		}
-		// Training構造体に代入してJSONでAIにPOST
-		trainingData := model.TrainingData{
-			// ID:       id,
-			States:   statesArr,
-			Epsilons: epsilonsArr,
-			Result:   resultVal,
-		}
-		trainingDatas = append(trainingDatas, trainingData)
-	}
-	// training dataを解析
-	jsonTrainingDatas, err := json.Marshal(trainingDatas)
-	if err != nil {
-		err = errors.New("Failed to convert TrainingDatas struct to JSON")
-		log.Println(err)
-		return
-	}
-
-	// POSTのボディ用意
-	postBody := bytes.NewBuffer(jsonTrainingDatas)
-	endpoint := AIURL + "/learning"
-	// trainingDatasがnilの状態でAIサーバーにリクエストを送るとAIサーバーが落ちるから
-	if len(trainingDatas) == 0 {
-		msg := `{"msg":Failed: The data didn't send to AI. There are now row in results table "status: -2}`
-		log.Printf("%s", msg)
-		return
-	}
-	// AIサーバーにPOSTリクエスト送信
-	resp, err := http.Post(endpoint, "application/json", postBody)
-	if err != nil {
-		log.Println(err)
-		log.Println("The AI was failed to learn because of a request error")
-	}
-	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		err = errors.New("Failed to read a response of learning result from AI server")
-		log.Println(err)
-		return
-	}
-	log.Printf("%s", respBody)
 }
